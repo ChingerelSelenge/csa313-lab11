@@ -56,6 +56,14 @@ class ScholarshipCalculatorTest {
         assertThrows(IllegalArgumentException.class, () -> calc.gpa(new double[] {}));
     }
 
+    @Test
+    void gpa_calculatesAllGradeBranches() {
+        assertEquals(
+                2.0,
+                calc.gpa(new double[] { 95, 85, 75, 65, 59 }),
+                0.001);
+    }
+
     // ---- scholarship: бүх дүрмийн салаа — гэхдээ зөвхөн муж шалгана ----
 
     @Test
@@ -68,8 +76,66 @@ class ScholarshipCalculatorTest {
     }
 
     @Test
+    void letterGrade_boundaryValues() {
+        assertEquals("A", calc.letterGrade(100));
+        assertEquals("A", calc.letterGrade(90));
+        assertEquals("B", calc.letterGrade(89.99));
+        assertEquals("B", calc.letterGrade(80));
+        assertEquals("C", calc.letterGrade(79.99));
+        assertEquals("C", calc.letterGrade(70));
+        assertEquals("D", calc.letterGrade(69.99));
+        assertEquals("D", calc.letterGrade(60));
+        assertEquals("F", calc.letterGrade(59.99));
+        assertEquals("F", calc.letterGrade(0));
+    }
+
+    @Test
     void scholarship_invalidInputs_throw() {
-        assertThrows(IllegalArgumentException.class, () -> calc.scholarship(4.1, 10, false));
-        assertThrows(IllegalArgumentException.class, () -> calc.scholarship(3.0, -1, false));
+        // GPA 0-ээс бага
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> calc.scholarship(-0.1, 10, false));
+
+        // GPA 4-өөс их
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> calc.scholarship(4.1, 10, false));
+
+        // Кредит 0-ээс бага
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> calc.scholarship(3.0, -1, false));
+    }
+
+    @Test
+    void scholarship_boundaryValues() {
+        // 100%-ийн тэтгэлгийн босго
+        assertEquals(100, calc.scholarship(3.8, 15, false));
+
+        // GPA 3.8-аас бага боловч 3.4 болон түүнээс дээш
+        assertEquals(70, calc.scholarship(3.799, 15, false));
+
+        // 70%-ийн тэтгэлгийн босго
+        assertEquals(70, calc.scholarship(3.4, 12, false));
+
+        // GPA 3.4-өөс бага боловч 3.0 болон түүнээс дээш
+        assertEquals(50, calc.scholarship(3.399, 12, false));
+
+        // 50%-ийн тэтгэлгийн босго
+        assertEquals(50, calc.scholarship(3.0, 0, false));
+
+        // 50%-ийн босгоос бага
+        assertEquals(0, calc.scholarship(2.999, 15, false));
+
+        // Кредитийн босгоос бага үед дараагийн нөхцөлд шилжих
+        assertEquals(70, calc.scholarship(3.9, 14, false));
+        assertEquals(50, calc.scholarship(3.5, 11, false));
+    }
+
+    @Test
+    void scholarship_validInputBoundaries() {
+        assertEquals(0, calc.scholarship(0.0, 0, false));
+        assertEquals(100, calc.scholarship(4.0, 15, false));
+        assertEquals(0, calc.scholarship(4.0, 15, true));
     }
 }
